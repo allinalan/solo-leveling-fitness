@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>ALAN // SOLO LEVELING FITNESS</title>
+
+  <!-- CDN Dependencies -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: #0a0a0f;
+      color: #e2e8f0;
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    #root { min-height: 100vh; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+    button { cursor: pointer; font-family: inherit; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: #0a0a0f; }
+    ::-webkit-scrollbar-thumb { background: #2d2d3f; border-radius: 2px; }
+
+    /* ── Rank Colors & Glows ────────────────────────────────────────── */
+    .rank-E { color: #9ca3af; }
+    .rank-D { color: #4ade80; }
+    .rank-C { color: #60a5fa; }
+    .rank-B { color: #c084fc; }
+    .rank-A { color: #fbbf24; }
+    .rank-S { color: #f87171; }
+
+    .glow-E { box-shadow: 0 0 12px #9ca3af60, 0 0 30px #9ca3af20; border-color: #9ca3af !important; }
+    .glow-D { box-shadow: 0 0 15px #4ade8070, 0 0 35px #4ade8030; border-color: #4ade80 !important; }
+    .glow-C { box-shadow: 0 0 15px #60a5fa70, 0 0 35px #60a5fa30; border-color: #60a5fa !important; }
+    .glow-B { box-shadow: 0 0 20px #c084fc80, 0 0 45px #c084fc30; border-color: #c084fc !important; }
+    .glow-A { box-shadow: 0 0 20px #fbbf2480, 0 0 50px #fbbf2430; border-color: #fbbf24 !important; }
+    .glow-S { box-shadow: 0 0 25px #f8717190, 0 0 60px #f8717140, 0 0 100px #f8717115; border-color: #f87171 !important; }
+
+    /* ── Cards ──────────────────────────────────────────────────────── */
+    .card {
+      background: #12121a;
+      border: 1px solid #1e1e2e;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    /* ── XP Bar ─────────────────────────────────────────────────────── */
+    .xp-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: #1a1a2e;
+      overflow: hidden;
+      position: relative;
+    }
+    .xp-fill {
+      height: 100%;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #5b21b6, #8b5cf6, #a78bfa);
+      box-shadow: 0 0 10px #8b5cf680;
+      transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .xp-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer {
+      100% { left: 100%; }
+    }
+
+    /* ── Progress Bars ──────────────────────────────────────────────── */
+    .prog-bar {
+      height: 7px;
+      border-radius: 4px;
+      background: #1a1a2e;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s ease;
+    }
+
+    /* ── Nav ────────────────────────────────────────────────────────── */
+    .nav-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(10,10,15,0.97);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid #1e1e2e;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 max(12px, env(safe-area-inset-bottom));
+      z-index: 200;
+    }
+    .nav-btn {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      padding: 6px 18px;
+      border: none; background: none;
+      color: #4b5563;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      transition: color 0.2s;
+      border-radius: 10px;
+    }
+    .nav-btn.active { color: #a78bfa; }
+    .nav-btn svg { width: 22px; height: 22px; }
+
+    /* ── Toggle ─────────────────────────────────────────────────────── */
+    .toggle { display: flex; background: #1a1a2e; border-radius: 8px; padding: 3px; gap: 3px; }
+    .tog-opt {
+      flex: 1; padding: 7px 14px;
+      border: none; border-radius: 6px; background: transparent;
+      color: #6b7280; font-size: 13px; font-weight: 700;
+      transition: all 0.2s;
+    }
+    .tog-opt.active { background: #7c3aed; color: white; box-shadow: 0 2px 8px #7c3aed60; }
+
+    /* ── Input ──────────────────────────────────────────────────────── */
+    .inp {
+      background: #1a1a2e;
+      border: 1px solid #2d2d3f;
+      border-radius: 10px;
+      color: white;
+      padding: 12px 14px;
+      width: 100%;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .inp:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px #8b5cf620; }
+    .inp option { background: #12121a; }
+
+    /* ── Buttons ────────────────────────────────────────────────────── */
+    .btn-primary {
+      background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+      border: none; border-radius: 12px;
+      color: white; padding: 14px 20px;
+      font-size: 15px; font-weight: 700; letter-spacing: 1.5px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px #8b5cf640;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px #8b5cf660; }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Badges ─────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: 4px 11px; border-radius: 20px;
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 0.8px; text-transform: uppercase;
+    }
+    .badge-success { background: #052e16; color: #4ade80; border: 1px solid #4ade8040; }
+    .badge-warning { background: #451a03; color: #fbbf24; border: 1px solid #fbbf2440; }
+    .badge-danger  { background: #450a0a; color: #f87171; border: 1px solid #f8717140; }
+    .badge-info    { background: #0c1a3a; color: #60a5fa; border: 1px solid #60a5fa40; }
+
+    /* ── Workout Type Chips ─────────────────────────────────────────── */
+    .wtype-chip {
+      padding: 7px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600;
+      transition: all 0.2s;
+      border: 1px solid #2d2d3f;
+      background: transparent; color: #6b7280;
+    }
+    .wtype-chip.active {
+      background: #7c3aed20; color: #a78bfa;
+      border-color: #8b5cf6; box-shadow: 0 0 10px #8b5cf620;
+    }
+
+    /* ── Animations ─────────────────────────────────────────────────── */
+    @keyframes levelUpAnim {
+      0%   { opacity: 0; transform: scale(0.4) translateY(30px); }
+      15%  { opacity: 1; transform: scale(1.15) translateY(-10px); }
+      30%  { transform: scale(0.98) translateY(0); }
+      70%  { opacity: 1; transform: scale(1) translateY(0); }
+      100% { opacity: 0; transform: scale(1.05) translateY(-15px); }
+    }
+    @keyframes xpFloat {
+      0%   { opacity: 0; transform: translateY(0) scale(0.8); }
+      20%  { opacity: 1; transform: translateY(-5px) scale(1); }
+      80%  { opacity: 1; transform: translateY(-30px) scale(1); }
+      100% { opacity: 0; transform: translateY(-55px) scale(0.9); }
+    }
+    @keyframes rankPulse {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.04); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scanline {
+      0%   { transform: translateY(-100%); }
+      100% { transform: translateY(100vh); }
+    }
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
+    .rank-pulse { animation: rankPulse 3s ease-in-out infinite; }
+
+    /* ── Level Up Overlay ───────────────────────────────────────────── */
+    .levelup-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999; pointer-events: none;
+    }
+    .levelup-content {
+      text-align: center;
+      animation: levelUpAnim 3.2s ease forwards;
+    }
+
+    /* ── XP Toast ───────────────────────────────────────────────────── */
+    .xp-toast {
+      position: fixed;
+      top: 24px; right: 20px;
+      background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+      color: white; padding: 10px 18px;
+      border-radius: 12px; font-weight: 800; font-size: 17px;
+      z-index: 800; box-shadow: 0 4px 20px #8b5cf660;
+      animation: xpFloat 2s ease forwards;
+      pointer-events: none;
+    }
+
+    /* ── Welcome Screen ─────────────────────────────────────────────── */
+    .welcome-screen {
+      position: fixed; inset: 0;
+      background: #0a0a0f;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    /* ── Content Area ───────────────────────────────────────────────── */
+    .content {
+      padding: 0 16px 90px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Chart Container ────────────────────────────────────────────── */
+    .chart-wrap { position: relative; height: 190px; }
+
+    /* ── Rank Badge Ring ────────────────────────────────────────────── */
+    .rank-ring {
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900;
+      border: 3px solid;
+      transition: all 0.5s ease;
+    }
+
+    /* ── Photo Slot ─────────────────────────────────────────────────── */
+    .photo-slot {
+      aspect-ratio: 3/4;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #1a1a2e;
+      display: flex; align-items: center; justify-content: center;
+      border: 2px dashed #2d2d3f;
+      transition: border-color 0.2s;
+    }
+    .photo-slot:hover { border-color: #7c3aed; }
+    .photo-slot img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ── Stat Row ───────────────────────────────────────────────────── */
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #1a1a2e;
+    }
+    .stat-row:last-child { border-bottom: none; }
+
+    /* ── Section Header ─────────────────────────────────────────────── */
+    .sec-hdr {
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: #8b5cf6; margin-bottom: 12px;
+    }
+
+    /* ── Horizontal Divider ─────────────────────────────────────────── */
+    .divider { height: 1px; background: #1e1e2e; margin: 12px 0; }
+
+    /* ── Scanline Effect (decorative) ──────────────────────────────────── */
+    .scanline-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1001;
+      overflow: hidden; opacity: 0;
+    }
+
+    /* ── S Rank Shimmer ─────────────────────────────────────────────── */
+    @keyframes sRankShimmer {
+      0%,100% { box-shadow: 0 0 25px #f8717190, 0 0 60px #f8717140; }
+      50%      { box-shadow: 0 0 35px #f87171b0, 0 0 80px #f8717160, 0 0 120px #f8717120; }
+    }
+    .rank-ring-S { animation: sRankShimmer 2s ease-in-out infinite; }
+
+    /* ── Day Dot (week view) ────────────────────────────────────────── */
+    .day-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════════════════ */
+
+const STORAGE_KEY = 'slft-alan-v1';
+
+const RANK_DATA = [
+  { rank:'E', title:'Undisciplined', minXP:0,    bfMax:Infinity, color:'#9ca3af', bg:'#9ca3af15' },
+  { rank:'D', title:'Building',      minXP:400,  bfMax:25,       color:'#4ade80', bg:'#4ade8015' },
+  { rank:'C', title:'Consistent',    minXP:1000, bfMax:22,       color:'#60a5fa', bg:'#60a5fa15' },
+  { rank:'B', title:'Disciplined',   minXP:2000, bfMax:19,       color:'#c084fc', bg:'#c084fc15' },
+  { rank:'A', title:'Relentless',    minXP:3500, bfMax:17,       color:'#fbbf24', bg:'#fbbf2415' },
+  { rank:'S', title:'Elite',         minXP:5500, bfMax:15,       col71', bg:'#f8717115' },
+];
+
+const LIFT_TYPES = ['Push','Pull','Legs','Posterior'];
+const ALL_WORKOUT_TYPES = [...LIFT_TYPES,'Conditioning'];
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_FULL  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const WEIGH_IN_DAYS = new Set([0,1,3,5]); // Sun, Mon, Wed, Fri
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+═══════════════════════════════════════════════════════════════════════ */
+
+/** Returns "YYYY-MM-DD" for a given Date (or today) */
+function dateStr(d = new Date()) {
+  return d.toISOString().split('T')[0];
+}
+
+/** Get the Monday of the week containing `d` */
+function weekMonday(d = new Date()) {
+  const copy = new Date(d);
+  copy.setHours(0,0,0,0);
+  const day = copy.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  copy.setDate(copy.getDate() + diff);
+  return copy;
+}
+
+/** Get array of 7 date strings [Mon..Sun] for the week containing `d` */
+function weekDays(d = new Date()) {
+  const mon = weekMonday(d);
+  return Array.from({length:7}, (_,i) => {
+    const x = new Date(mon);
+    x.setDate(mon.getDate() + i);
+    return dateStr(x);
+  });
+}
+
+/** ISO week key like "2026-W17" */
+function weekKey(d = new Date()) {
+  const thu = new Date(d);
+  thu.setHours(0,0,0,0);
+  thu.setDate(thu.getDate() + 3 - ((thu.getDay()+6)%7));
+  const y = thu.getFullYear();
+  const w1 = new Date(y, 0, 4);
+  const n  = 1 + Math.round(((thu - w1)/864e5 - 3 + ((w1.getDay()+6)%7)) / 7);
+  return `${y}-W${String(n).padStart(2,'0')}`;
+}
+
+/** Display label: "Apr 22" */
+function fmtDate(ds) {
+  const [y,m,day] = ds.split('-');
+  return new Date(+y, +m-1, +day).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+/** XP needed to go from level n → n+1: 100, 125, 150, … */
+function xpNeeded(level) { return 100 + (level - 1) * 25; }
+
+/** Compute level, currentXP (within level), xpForNext, and progress fraction from totalXP */
+function calcLevel(totalXP) {
+  let lvl = 1, rem = totalXP;
+  while (true) {
+    const needed = xpNeeded(lvl);
+    if (rem < needed) break;
+    rem -= needed;
+    lvl++;
+  }
+  const forNext = xpNeeded(lvl);
+  return { level: lvl, currentXP: rem, xpForNext: forNext, progress: rem / forNext };
+}
+
+/** Compute which rank Alan is + promotion status */
+function calcRank(totalXP, bodyFat) {
+  // Find highest rank where BOTH XP and BF are met
+  let idx = 0;
+  for (let i = 0; i < RANK_DATA.length; i++) {
+    const r = RANK_DATA[i];
+    const xpOk = totalXP >= r.minXP;
+    const bfOk = bodyFat == null || bodyFat <= r.bfMax;
+    if (xpOk && bfOk) idx = i;
+  }
+  const current = RANK_DATA[idx];
+  const next    = idx < RANK_DATA.length - 1 ? RANK_DATA[idx+1] : null;
+
+  let promotionStatus = null;
+  if (next) {
+    const xpOk = totalXP >= next.minXP;
+    const bfOk = bodyFat == null || bodyFat <= next.bfMax;
+    if (xpOk && !bfOk)  promotionStatus = { type:'block-bf',  msg:`Promotion blocked: body fat must reach ≤${next.bfMax}%` };
+    else if (!xpOk && bfOk) promotionStatus = { type:'block-xp', msg:`Promotion blocked: need ${next.minXP.toLocaleString()} XP total` };
+    else if (xpOk && bfOk)  promotionStatus = { type:'ready',    msg:`Ready for ${next.rank}-Rank promotion!` };
+  }
+  return { current, next, promotionStatus, idx };
+}
+
+/** XP earned from a single day's log (max 70) */
+function dayXP(log) {
+  if (!log) return 0;
+  let xp = 0;
+  if ((log.steps || 0) >= 10000) xp += 10;
+  if (!log.isRestDay && log.workoutCompleted) {
+    xp += log.workoutType === 'Conditioning' ? 15 : 20;
+  }
+  if (log.nutritionWin) xp += 25;
+  return Math.min(xp, 70);
+}
+
+/** Compute weekly stats from logs object */
+function calcWeekStats(logs, days) {
+  let steps10k=0, lifts=0, conditioning=0, nutrition=0;
+  for (const d of days) {
+    const l = logs[d];
+    if (!l) continue;
+    if ((l.steps||0) >= 10000) steps10k++;
+    if (!l.isRestDay && l.workoutCompleted) {
+      if (l.workoutType === 'Conditioning') conditioning++;
+      else if (LIFT_TYPES.includes(l.workoutType)) lifts++;
+    }
+    if (l.nutritionWin) nutrition++;
+  }
+  return { steps10k, lifts, conditioning, nutrition };
+}
+
+/** Weekly performance label */
+function weekStatus(stats) {
+  const { steps10k, lifts, conditioning, nutrition } = stats;
+  const ceiling = steps10k>=7 && lifts>=4 && conditioning>=2 && nutrition>=7;
+  const floor   = steps10k>=7 && lifts>=3 && conditioning>=1 && nutrition>=6;
+  if (ceiling) return { label:'High Performance Week',             type:'success' };
+  if (floor)   return { label:'Minimum Standard Maintained',       type:'warning' };
+  return         { label:'Execution Failure – Adjust Immediately', type:'danger'  };
+}
+
+/** Latest non-null body fat from logs */
+function latestBF(logs) {
+  for (const d of Object.keys(logs).sort().reverse()) {
+    if (logs[d]?.bodyFat != null) return logs[d].bodyFat;
+  }
+  return null;
+}
+
+/** Latest non-null body weight */
+function latestBW(logs) {
+  for (const d of Object.keys(logs).sort().reverse()) {
+    if (logs[d]?.bodyWeight != null) return logs[d].bodyWeight;
+  }
+  return null;
+}
+
+/** Consecutive-days streak (logged today or yesterday as most recent) */
+function calcStreak(logs) {
+  const today = dateStr();
+  let streak = 0;
+  let check = new Date();
+  // Allow today or yesterday as start
+  if (!logs[dateStr(check)]) check.setDate(check.getDate()-1);
+  while (logs[dateStr(check)]) {
+    streak++;
+    check.setDate(check.getDate()-1);
+  }
+  return streak;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LOCALSTORAGE
+═══════════════════════════════════════════════════════════════════════ */
+
+function loadState() {
+  try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
+}
+function saveState(s) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) { console.warn('Storage full:', e); }
+}
+
+const INIT_STATE = {
+  firstLoad: true,
+  totalXP: 0,
+  logs: {},          // { "YYYY-MM-DD": LogEntry }
+  weeklyPhotos: {},  // { "YYYY-WXX": { front, side, back } (base64) }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SMALL SVG ICONS
+═══════════════════════════════════════════════════════════════════════ */
+
+const Icon = {
+  Home:    ()=> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  Edit:    ()=> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  Chart:   ()=> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  Camera:  ()=> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>,
+  Bolt:    ()=> <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.5 13.5H11L10 22L19.5 10.5H13L13 2Z"/></svg>,
+  Fire:    ()=> <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c0 0-4 5-4 9a4 4 0 008 0c0-4-4-9-4-9zm0 13a2 2 0 110-4 2 2 0 010 4z"/></svg>,
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WELCOME SCREEN
+═══════════════════════════════════════════════════════════════════════ */
+
+function WelcomeScreen({ onStart }) {
+  return (
+    <div className="welcome-screen">
+      <div style={{maxWidth:460,margin:'0 auto',padding:'40px 20px 60px'}}>
+
+        {/* Header */}
+        <div style={{textAlign:'center',marginBottom:40}}>
+          <div style={{
+            display:'inline-block',
+            padding:'6px 18px',
+            background:'#8b5cf620',
+            border:'1px solid #8b5cf640',
+            borderRadius:20,
+            fontSize:11,fontWeight:800,letterSpacing:3,
+            color:'#a78bfa',marginBottom:16
+          }}>
+            SYSTEM INITIALIZING
+          </div>
+          <h1 style={{
+            fontSize:52,fontWeight:900,lineHeight:0.95,
+            background:'linear-gradient(135deg,#8b5cf6 0%,#60a5fa 50%,#a78bfa 100%)',
+            WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
+            marginBottom:8,letterSpacing:2
+          }}>ALAN</h1>
+          <p style={{color:'#6b7280',fontSize:15}}>Your path to S-Rank begins now.</p>
+        </div>
+
+        {/* Rank Table */}
+        <div className="card" style={{marginBottom:16}}>
+          <div className="sec-hdr">Rank System</div>
+          {RANK_DATA.map((r,i)=>(
+            <div key={r.rank} style={{
+              display:'flex',alignItems:'center',gap:14,
+              padding:'12px 0',
+              borderBottom: i<RANK_DATA.length-1 ? '1px solid #1a1a2e' : 'none',
+            }}>
+              <div className={`rank-ring glow-${r.rank}`} style={{
+                width:44,height:44,fontSize:20,flexShrink:0,
+                color:r.color,borderColor:r.color
+              }}>
+                {r.rank}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{color:r.color,fontWeight:800,fontSize:14,marginBottom:2}}>{r.title}</div>
+                <div style={{color:'#6b7280',fontSize:12}}>
+                  {r.minXP>0 ? `${r.minXP.toLocaleString()}+ XP` : 'Starting rank'}
+                  {' · '}
+                  {r.rank==='E'?'BF 25%+':r.rank==='D'?'BF 23–25%':r.rank==='C'?'BF 20–22%':r.rank==='B'?'BF 18–19%':r.rank==='A'?'BF 16–17%':'BF ≤15%'}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* XP Guide */}
+        <div className="card" style={{marginBottom:16}}>
+          <div className="sec-hdr">XP System</div>
+          {[
+            ['10k+ Steps','＋10 XP','#60a5fa'],
+            ['Lift Session','＋20 XP','#c084fc'],
+            ['Conditioning','＋15 XP','#4ade80'],
+            ['Nutrition Win','＋25 XP','#fbbf24'],
+            ['Daily Maximum','70 XP','#f87171'],
+          ].map(([l,v,c])=>(
+            <div key={l} className="stat-row" style={{fontSize:14}}>
+              <span style={{color:'#94a3b8'}}>{l}</span>
+              <span style={{color:c,fontWeight:800}}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Weekly Standards */}
+        <div className="card" style={{marginBottom:32}}>
+          <div className="sec-hdr">Weekly Standards</div>
+          <div style={{padding:'10px 14px',background:'#052e16',borderRadius:10,border:'1px solid #4ade8030',marginBottom:10}}>
+            <div style={{color:'#4ade80',fontWeight:800,fontSize:13,marginBottom:4}}>⚡ CEILING — Optimal</div>
+            <div style={{color:'#86efac',fontSize:13}}>Steps 10k ×7 · 4 Lifts · 2 Conditioning · 7 Nutrition Wins</div>
+          </div>
+          <div style={{padding:'10px 14px',background:'#451a03',borderRadius:10,border:'1px solid #fbbf2430'}}>
+            <div style={{color:'#fbbf24',fontWeight:800,fontSize:13,marginBottom:4}}>▬ FLOOR — Minimum</div>
+            <div style={{color:'#fde68a',fontSize:13}}>Steps 10k ×7 · 3 Lifts · 1 Conditioning · 6 Nutrition Wins</div>
+          </div>
+        </div>
+
+        <button className="btn-primary" onClick={onStart}
+          style={{width:'100%',padding:'18px',fontSize:17,letterSpacing:3}}>
+          ENTER THE SYSTEM
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PLAYER CARD
+═══════════════════════════════════════════════════════════════════════ */
+
+function PlayerCard({ totalXP, bodyFat }) {
+  const lvl   = calcLevel(totalXP);
+  const rank  = calcRank(totalXP, bodyFat);
+  const r     = rank.current;
+
+  return (
+    <div className="card fade-in" style={{
+      background:`linear-gradient(135deg,#0f0f1a 0%,#14142a 100%)`,
+      border:`1px solid ${r.color}40`,
+      marginBottom:14,
+      position:'relative',overflow:'hidden',
+    }}>
+      {/* Background radial glow */}
+      <div style={{
+        position:'absolute',top:-60,right:-60,
+        width:200,height:200,
+        borderRadius:'50%',
+        background:`radial-gradient(circle,${r.color}18 0%,transparent 70%)`,
+        pointerEvents:'none',
+      }}/>
+
+      {/* Top row */}
+      <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:18}}>
+        {/* Rank Badge */}
+        <div className={`rank-ring rank-pulse ${r.rank==='S'?'rank-ring-S':''} glow-${r.rank}`}
+          style={{width:76,height:76,fontSize:34,flexShrink:0,color:r.color,borderColor:r.color,background:r.bg}}>
+          {r.rank}
+        </div>
+
+        <div style={{flex:1}}>
+          <div style={{fontSize:10,color:'#4b5563',letterSpacing:3,fontWeight:800,marginBottom:2}}>PLAYER</div>
+          <div style={{fontSize:26,fontWeight:900,letterSpacing:2,color:'white',lineHeight:1}}>ALAN</div>
+          <div style={{fontSize:13,color:r.color,fontWeight:700,marginTop:3}}>{r.title}</div>
+        </div>
+
+        <div style={{textAlign:'right',flexShrink:0}}>
+          <div style={{fontSize:10,color:'#4b5563',letterSpacing:3,fontWeight:800}}>LEVEL</div>
+          <div style={{fontSize:46,fontWeight:900,color:'white',lineHeight:1}}>{lvl.level}</div>
+        </div>
+      </div>
+
+      {/* XP Bar */}
+      <div style={{marginBottom:12}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:12}}>
+          <span style={{color:'#6b7280',fontWeight:700,letterSpacing:1}}>EXPERIENCE</span>
+          <span style={{color:'#a78bfa',fontWeight:800}}>
+            {lvl.currentXP.toLocaleString()} / {lvl.xpForNext.toLocaleString()} XP
+          </span>
+        </div>
+        <div className="xp-bar">
+          <div className="xp-fill" style={{width:`${lvl.progress*100}%`}}/>
+        </div>
+      </div>
+
+      {/* Promotion status */}
+      {rank.promotionStatus && (
+        <div style={{
+          padding:'8px 12px',borderRadius:8,fontSize:12,fontWeight:700,
+          background: rank.promotionStatus.type==='ready' ? '#052e16' : '#450a0a',
+          color:       rank.promotionStatus.type==='ready' ? '#4ade80' : '#f87171',
+          border:`1px solid ${rank.promotionStatus.type==='ready'?'#4ade8030':'#f8717130'}`,
+          marginBottom:12,
+        }}>
+          {rank.promotionStatus.type==='ready'?'✦':rank.promotionStatus.type==='block-bf'?'🔒':'⚡'}{' '}
+          {rank.promotionStatus.msg}
+        </div>
+      )}
+
+      {/* Quick stats */}
+      <div style={{display:'flex',gap:20}}>
+        <div>
+          <div style={{fontSize:10,color:'#6b7280',letterSpacing:2,fontWeight:700}}>TOTAL XP</div>
+          <div style={{fontSize:18,fontWeight:900,color:'#a78bfa'}}>{totalXP.toLocaleString()}</div>
+        </div>
+        {bodyFat != null && (
+          <div>
+            <div style={{fontSize:10,color:'#6b7280',letterSpacing:2,fontWeight:700}}>BODY FAT</div>
+            <div style={{fontSize:18,fontWeight:900,color:r.color}}>{bodyFat}%</div>
+          </div>
+        )}
+        {rank.next && (
+          <div style={{marginLeft:'auto',textAlign:'right'}}>
+            <div style={{fontSize:10,color:'#6b7280',letterSpacing:2,fontWeight:700}}>NEXT RANK</div>
+            <div style={{fontSize:18,fontWeight:900,color:rank.next.color}}>{rank.next.rank}</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   WEEKLY TRACKER
+═══════════════════════════════════════════════════════════════════════ */
+
+function WeeklyTracker({ stats, logs }) {
+  const { steps10k, lifts, conditioning, nutrition } = stats;
+  const status = weekStatus(stats);
+
+  // Day dots for steps
+  const days = weekDays();
+  const today = dateStr();
+
+  const bars = [
+    { label:'Steps 10k', cur:steps10k, floor:7, ceil:7,  color:'#60a5fa' },
+    { label:'Lifting',   cur:lifts,    floor:3, ceil:4,  color:'#c084fc' },
+    { label:'Cond.',     cur:conditioning,floor:1,ceil:2,color:'#4ade80' },
+    { label:'Nutrition', cur:nutrition,floor:6, ceil:7,  color:'#fbbf24' },
+  ];
+
+  return (
+    <div className="card fade-in" style={{marginBottom:14}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+        <div className="sec-hdr" style={{marginBottom:0}}>This Week</div>
+        <span className={`badge badge-${status.type}`}>{status.label}</span>
+      </div>
+
+      {/* Steps day dots */}
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:14}}>
+        {days.map((d,i)=>{
+          const l = logs[d];
+          const hit = (l?.steps||0)>=10000;
+          const isToday = d===today;
+          const isPast  = d<today;
+          return (
+            <div key={d} style={{textAlign:'center'}}>
+              <div className="day-dot" style={{
+                background: hit ? '#60a5fa25' : isToday ? '#1a1a2e' : 'transparent',
+                border: `2px solid ${hit?'#60a5fa':isToday?'#4b5563':'#1e1e2e'}`,
+                color: hit ? '#60a5fa' : isToday ? '#6b7280' : '#374151',
+                fontSize: 13,
+              }}>
+                {hit?'✓':''}
+              </div>
+              <div style={{fontSize:9,color:isToday?'#6b7280':'#374151',fontWeight:700,marginTop:3}}>
+                {DAY_NAMES[i]}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Progress bars */}
+      {bars.map(b => {
+        const pct = Math.min((b.cur/b.ceil)*100,100);
+        const metFloor = b.cur >= b.floor;
+        const metCeil  = b.cur >= b.ceil;
+        const barColor = metCeil ? b.color : metFloor ? b.color+'99' : '#f87171';
+        return (
+          <div key={b.label} style={{marginBottom:12}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:13}}>
+              <span style={{color:'#94a3b8'}}>{b.label}</span>
+              <span style={{color: metCeil?b.color : metFloor?b.color : '#f87171', fontWeight:800}}>
+                {b.cur}/{b.ceil}
+                {metCeil ? ' ⚡' : metFloor ? ' ✓' : ''}
+              </span>
+            </div>
+            <div className="prog-bar">
+              <div className="prog-fill" style={{
+                width:`${pct}%`,
+                background:`linear-gradient(90deg,${barColor}80,${barColor})`,
+                boxShadow: metFloor ? `0 0 8px ${barColor}60` : 'none',
+              }}/>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',marginTop:3,fontSize:10,color:'#374151'}}>
+              <span>Floor: {b.floor}</span>
+              <span>Ceiling: {b.ceil}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   QUICK STATS GRID
+═══════════════════════════════════════════════════════════════════════ */
+
+function QuickStats({ streak, totalXP, bodyFat, weekXP }) {
+  const items = [
+    { icon:'🔥', label:'STREAK',   val: streak ? `${streak}d` : '--',                  color:'#f97316' },
+    { icon:'⚡', label:'TOTAL XP', val: totalXP.toLocaleString(),                       color:'#a78bfa' },
+    { icon:'📊', label:'BODY FAT', val: bodyFat!=null ? `${bodyFat}%` : '--',           color:'#4ade80' },
+    { icon:'📈', label:'WEEK XP',  val: weekXP,                                         color:'#60a5fa' },
+  ];
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
+      {items.map(s=>(
+        <div key={s.label} className="card fade-in" style={{textAlign:'center',padding:14}}>
+          <div style={{fontSize:22,marginBottom:4}}>{s.icon}</div>
+          <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
+          <div style={{fontSize:9,color:'#6f7280',letterSpacing:2,fontWeight:800,marginTop:2}}>{s.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HOME / DASHBOARD TAB
+═══════════════════════════════════════════════════════════════════════ */
+
+function Dashboard({ state }) {
+  const { logs, totalXP } = state;
+  const today    = dateStr();
+  const wDays    = weekDays();
+  const wStats   = calcWeekStats(logs, wDays);
+  const bodyFat  = latestBF(logs);
+  const streak   = calcStreak(logs);
+  const weekXP   = wDays.reduce((s,d)=>s+dayXP(logs[d]),0);
+  const todayLog = logs[today];
+
+  return (
+    <div className="content" style={{paddingTop:20}}>
+      <div style={{fontSize:10,color:'#6b7280',letterSpacing:3,fontWeight:800,marginBottom:14}}>HUNTER STATUS</div>
+      <PlayerCard totalXP={totalXP} bodyFat={bodyFat}/>
+      <WeeklyTracker stats={wStats} logs={logs}/>
+      <QuickStats streak={streak} totalXP={totalXP} bodyFat={bodyFat} weekXP={weekXP}/>
+
+      {/* Today's log preview */}
+      <div className="card fade-in">
+        <div className="sec-hdr">Today's Log</div>
+        {todayLog ? (
+          <>
+            <div className="stat-row">
+              <span style={{color:'#94a3b8',fontSize:14}}>Steps</span>
+              <span style={{color:(todayLog.steps||0)>=10000?'#4ade80':'#fbbf24',fontWeight:800}}>
+                {(todayLog.steps||0).toLocaleString()}
+                {(todayLog.steps||0)>=10000?' ✓':''}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span style={{color:'#94a3b8',fontSize:14}}>Workout</span>
+              <span style={{color:'white',fontWeight:700}}>
+                {todayLog.isRestDay ? 'Rest Day 😴' : todayLog.workoutCompleted ? `✓ ${todayLog.workoutType}` : '—'}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span style={{color:'#94a3b8',fontSize:14}}>Nutrition</span>
+              <span style={{color:todayLog.nutritionWin?'#4ade80':'#f87171',fontWeight:700}}>
+                {todayLog.nutritionWin?'✓ Win':'✗ Miss'}
+              </span>
+            </div>
+            <div style={{
+              marginTop:14,textAlign:'center',
+              background:'#8b5cf610',border:'1px solid #8b5cf630',
+              borderRadius:10,padding:'10px',
+            }}>
+              <span style={{color:'#a78bfa',fontWeight:900,fontSize:18}}>+{dayXP(todayLog)} XP</span>
+              <span style={{color:'#6b7280',fontSize:13}}> earned today</span>
+            </div>
+          </>
+        ) : (
+          <div style={{textAlign:'center',color:'#4b5563',padding:'20px 0',fontSize:14}}>
+            No log yet today. Hit the Log tab to record your session. 💪
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DAILY LOG TAB
+═══════════════════════════════════════════════════════════════════════ */
+
+function DailyLog({ state, onUpdate, onXPGained }) {
+  const today       = dateStr();
+  const todayLog    = state.logs[today] || {};
+  const now         = new Date();
+  const isWeighIn   = WEIGH_IN_DAYS.has(now.getDay());
+
+  const [steps,     setSteps]     = useState(todayLog.steps     != null ? String(todayLog.steps)     : '');
+  const [isRest,    setIsRest]    = useState(todayLog.isRestDay  || false);
+  const [wDone,     setWDone]     = useState(todayLog.workoutCompleted || false);
+  const [wType,     setWType]     = useState(todayLog.workoutType      || 'Push');
+  const [nutWin,    setNutWin]    = useState(todayLog.nutritionWin     || false);
+  const [bw,        setBw]        = useState(todayLog.bodyWeight != null ? String(todayLog.bodyWeight) : '');
+  const [bf,        setBf]        = useState(todayLog.bodyFat    != null ? String(todayLog.bodyFat)    : '');
+  const [saved,     setSaved]     = useState(false);
+
+  const stepsInt = parseInt(steps)||0;
+  const previewXP = dayXP({
+    steps: stepsInt, isRestDay:isRest,
+    workoutCompleted: isRest?false:wDone, workoutType:wType, nutritionWin:nutWin,
+  });
+
+  const handleSave = () => {
+    const prevLog = state.logs[today];
+    const prevXP  = dayXP(prevLog);
+
+    const log = {
+      steps:             stepsInt,
+      isRestDay:         isRest,
+      workoutCompleted:  isRest ? false : wDone,
+      workoutType:       (!isRest && wDone) ? wType : null,
+      nutritionWin:      nutWin,
+      bodyWeight:        bw ? parseFloat(bw) : (prevLog?.bodyWeight ?? null),
+      bodyFat:           bf ? parseFloat(bf) : (prevLog?.bodyFat    ?? null),
+      savedAt:           new Date().toISOString(),
+    };
+
+    const xpDiff  = previewXP - prevXP;
+    const newTotal = state.totalXP + xpDiff;
+
+    const prevLvl = calcLevel(state.totalXP).level;
+    const newLvl  = calcLevel(newTotal).level;
+
+    onUpdate({ logs: { ...state.logs, [today]: log }, totalXP: newTotal });
+    if (xpDiff > 0) onXPGained(xpDiff, newLvl > prevLvl, newLvl);
+
+    setSaved(true);
+    setTimeout(()=>setSaved(false), 2500);
+  };
+
+  return (
+    <div className="content" style={{paddingTop:20}}>
+      <div style={{fontSize:10,color:'#6b7280',letterSpacing:3,fontWeight:800,marginBottom:6}}>DAILY LOG</div>
+      <div style={{fontSize:22,fontWeight:900,color:'white',marginBottom:16}}>
+        {DAY_FULL[now.getDay()]}, {fmtDate(today)}
+      </div>
+
+      {/* Weigh-in reminder */}
+      {isWeighIn && (
+        <div style={{
+          background:'#1a1a2e',border:'1px solid #8b5cf640',
+          borderRadius:12,padding:'12px 16px',marginBottom:14,
+          fontSize:13,color:'#a78bfa',fontWeight:700,
+          display:'flex',alignItems:'center',gap:10
+        }}>
+          <span style={{fontSize:18}}>📊</span>
+          <span>Weigh-in day — log weight & body fat: morning, post-bathroom, pre-food.</span>
+        </div>
+      )}
+
+      {/* STEPS */}
+      <div className="card" style={{marginBottom:12}}>
+        <div className="sec-hdr" style={{color:'#60a5fa'}}>Steps</div>
+        <input className="inp" type="number" placeholder="Enter step count…"
+          value={steps} onChange={e=>setSteps(e.target.value)} style={{marginBottom:10}}/>
+        <div style={{
+          fontSize:13, fontWeight:700,
+          color: stepsInt>=10000 ? '#4ade80' : '#6b7280',
+        }}>
+          {stepsInt>=10000
+            ? '✓ 10,000+ steps achieved  (+10 XP)'
+            : stepsInt>0
+              ? `${(10000-stepsInt).toLocaleString()} more steps to reach 10k`
+              : 'Enter steps to see progress'}
+        </div>
+      </div>
+
+      {/* REST DAY */}
+      <div className="card" style={{marginBottom:12}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div>
+            <div className="sec-hdr" style={{marginBottom:2}}>Rest Day</div>
+            <div style={{fontSize:12,color:'#6b7280'}}>Workout will be set to No</div>
+          </div>
+          <div className="toggle">
+            <button className={`tog-opt${!isRest?' active':''}`} onClick={()=>setIsRest(false)}>No</button>
+            <button className={`tog-opt${isRest?' active':''}`}  onClick={()=>setIsRest(true)}>Yes</button>
+          </div>
+        </div>
+      </div>
+
+      {/* WORKOUT */}
+      {!isRest && (
+        <div className="card" style={{marginBottom:12}}>
+          <div className="sec-hdr">Workout</div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom: wDone?14:0}}>
+            <span style={{color:'#94a3b8',fontSize:14}}>Completed?</span>
+            <div className="toggle">
+              <button className={`tog-opt${!wDone?' active':''}`} onClick={()=>setWDone(false)}>No</button>
+              <button className={`tog-opt${wDone?' active':''}`}  onClick={()=>setWDone(true)}>Yes</button>
+            </div>
+          </div>
+          {wDone && (
+            <>
+              <div style={{fontSize:12,color:'#6b7280',marginBottom:10}}>Workout type:</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {ACLOWORKOUT_TYPES.map(t=>(
+                  <button key={t} className={`wtype-chip${wType===t?' active':''}`} onClick={()=>setWType(t)}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+              <div style={{marginTop:10,fontSize:13,fontWeight:700,color:wType==='Conditioning'?'#4ade80':'#c084fc'}}>
+                {wType==='Conditioning' ? '+15 XP (Conditioning)' : '+20 XP (Lift)'}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* NUTRITION */}
+      <div className="card" style={{marginBottom:12}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div>
+            <div className="sec-hdr" style={{color:'#fbbf24',marginBottom:2}}>Nutrition Win</div>
+            <div style={{fontSize:12,color: nutWin?'#4ade80':'#6b7280'}}>
+              {nutWin ? '✓ +25 XP earned' : 'Hit your nutrition targets today?'}
+            </div>
+          </div>
+          <div className="toggle">
+            <button className={`tog-opt${!nutWin?' active':''}`} onClick={()=>setNutWin(false)}>No</button>
+            <button className={`tog-opt${nutWin?' active':''}`}  onClick={()=>setNutWin(true)}>Yes</button>
+          </div>
+        </div>
+      </div>
+
+      {/* BODY METRICS */}
+      <div className="card" style={{marginBottom:12}}>
+        <div className="sec-hdr" style={{color:isWeighIn?'#4ade80':'#6b7280'}}>
+          Body Metrics {!isWeighIn && <span style={{fontWeight:400,fontSize:10}}>(optional — weigh-in on Mon/Wed/Fri/Sun)</span>}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div>
+            <div style={{fontSize:12,color:'#6b7280',marginBottom:6}}>Weight (lbs)</div>
+            <input className="inp" type="number" placeholder="e.g. 185" step="0.1"
+              value={bw} onChange={e=>setBw(e.target.value)}/>
+          </div>
+          <div>
+            <div style={{fontSize:12,color:'#6b7280',marginBottom:6}}>Body Fat %</div>
+            <input className="inp" type="number" placeholder="e.g. 21.5" step="0.1"
+              value={bf} onChange={e=>setBf(e.target.value)}/>
+          </div>
+        </div>
+      </div>
+
+      {/* XP PREVIEW */}
+      <div className="card" style={{
+        marginBottom:16,
+        background:'linear-gradient(135deg,#1a0d3a,#1a1a2e)',
+        border:'1px solid #8b5cf640',
+        textAlign:'center',
+      }}>
+        <div style={{fontSize:11,color:'#6b7280',letterSpacing:2,fontWeight:800,marginBottom:4}}>XP THIS LOG</div>
+        <div style={{
+          fontSize:40,fontWeight:900,
+          background:'linear-gradient(90deg,#8b5cf6,#a78bfa)',
+          WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
+        }}>+{previewXP} XP</div>
+        <div style={{fontSize:12,color:'#6b7280',marginTop:2}}>
+          {70-previewXP > 0 ? `${70-previewXP} XP remaining to daily max` : '🏆 Daily maximum reached!'}
+        </div>
+      </div>
+
+      {/* SAVE */}
+      <button className="btn-primary" onClick={handleSave} style={{width:'100%',padding:'18px',fontSize:16,letterSpacing:2}}>
+        {saved ? '✓ SAVED!' : 'SAVE LOG'}
+      </button>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CHART HELPERS
+═══════════════════════════════════════════════════════════════════════ */
+
+Chart.defaults.color = '#6b7280';
+Chart.defaults.font.family = '-apple-system, Segoe UI, system-ui, sans-serif';
+
+function useChart(ref, config, deps) {
+  const inst = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    if (inst.current) inst.current.destroy();
+    if (config) inst.current = new Chart(ref.current, config);
+    return () => { if (inst.current) { inst.current.destroy(); inst.current = null; } };
+  }, deps);
+}
+
+const CHART_SCALE_OPTS = {
+  x: { ticks:{color:'#6b7280',font:{size:10}}, grid:{color:'#1a1a2e'}, border:{color:'#1e1e2e'} },
+  y: { ticks:{color:'#6b7280',font:{size:10}}, grid:{color:'#1a1a2e'}, border:{color:'#1e1e2e'} },
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PROGRESS TAB
+═══════════════════════════════════════════════════════════════════════ */
+
+function ProgressTab({ state }) {
+  const { logs } = state;
+  const allDates = Object.keys(logs).sort();
+
+  const weightRef = useRef(null);
+  const xpRef     = useRef(null);
+  const bfRef     = useRef(null);
+
+  // Weight data — last 4 weeks
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate()-28); cutoff.setHours(0,0,0,0);
+  const wtData  = allDates.filter(d=>new Date(d+'T00:00:00')>=cutoff && logs[d]?.bodyWeight!=null);
+  const bfData  = allDates.filter(d=>new Date(d+'T00:00:00')>=cutoff && logs[d]?.bodyFat!=null);
+
+  // Weekly XP — last 8 weeks
+  const weekXPData = useMemo(()=>{
+    const result = [];
+    for (let i=7;i>=0;i--) {
+      const ref = new Date(); ref.setDate(ref.getDate()-i*7);
+      const days = weekDays(ref);
+      const label = fmtDate(days[0]);
+      const xp = days.reduce((s,d)=>s+dayXP(logs[d]),0);
+      result.push({ label, xp });
+    }
+    return result;
+  }, [logs]);
+
+  useChart(weightRef,
+    wtData.length > 0 ? {
+      type:'line',
+      data:{
+        labels: wtData.map(d=>fmtDate(d)),
+        datasets:[{
+          data: wtData.map(d=>logs[d].bodyWeight),
+          borderColor:'#60a5fa', backgroundColor:'#60a5fa15',
+          tension:0.4, fill:true,
+          pointBackgroundColor:'#60a5fa', pointRadius:5, pointHoverRadius:7,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.raw} lbs`}} },
+        scales:CHART_SCALE_OPTS,
+      }
+    } : null,
+    [logs]
+  );
+
+  useChart(xpRef, {
+    type:'bar',
+    data:{
+      labels: weekXPData.map(d=>d.label),
+      datasets:[{
+        data: weekXPData.map(d=>d.xp),
+        backgroundColor: weekXPData.map((_,i)=>i===weekXPData.length-1?'#8b5cf6':'#8b5cf640'),
+        borderColor:'#8b5cf6', borderWidth:1, borderRadius:6,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:CHART_SCALE_OPTS,
+    }
+  }, [logs]);
+
+  useChart(bfRef,
+    bfData.length > 0 ? {
+      type:'line',
+      data:{
+        labels: bfData.map(d=>fmtDate(d)),
+        datasets:[{
+          data: bfData.map(d=>logs[d].bodyFat),
+          borderColor:'#fbbf24', backgroundColor:'#fbbf2415',
+          tension:0.4, fill:true,
+          pointBackgroundColor:'#fbbf24', pointRadius:5, pointHoverRadius:7,
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.raw}%`}} },
+        scales:{
+          x:CHART_SCALE_OPTS.x,
+          y:{ ...CHART_SCALE_OPTS.y, reverse:true,
+              ticks:{...CHART_SCALE_OPTS.y.ticks,callback:v=>`${v}%`} },
+        },
+      }
+    } : null,
+    [logs]
+  );
+
+  // Weekly history
+  const weekHistory = useMemo(()=>{
+    const seen = new Set(), result = [];
+    for (const d of [...allDates].reverse()) {
+      const wk = weekKey(new Date(d+'T00:00:00'));
+      if (seen.has(wk)) continue;
+      seen.add(wk);
+      const days = weekDays(new Date(d+'T00:00:00'));
+      const stats = calcWeekStats(logs, days);
+      const status = weekStatus(stats);
+      const xp = days.reduce((s,x)=>s+dayXP(logs[x]),0);
+      result.push({ wk, label:`Week of ${fmtDate(days[0])}`, stats, status, xp });
+    }
+    return result.slice(0,12);
+  }, [logs]);
+
+  const EmptyChart = ({msg})=>(
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',
+      height:'100%',color:'#4b5563',fontSize:13}}>
+      {msg}
+    </div>
+  );
+
+  return (
+    <div className="content" style={{paddingTop:20}}>
+      <div style={{fontSize:10,color:'#6b7280',letterSpacing:3,fontWeight:800,marginBottom:14}}>ANALYTICS</div>
+
+      {/* Weight Chart */}
+      <div className="card fade-in" style={{marginBottom:12}}>
+        <div className="sec-hdr" style={{color:'#60a5fa'}}>Weight Trend (lbs)</div>
+        <div className="chart-wrap">
+          {wtData.length>0 ? <canvas ref={weightRef}/> : <EmptyChart msg="Log body weight to see trend"/>}
+        </div>
+      </div>
+
+      {/* XP Chart */}
+      <div className="card fade-in" style={{marginBottom:12}}>
+        <div className="sec-hdr" style={{color:'#8b5cf6'}}>Weekly XP Earned</div>
+        <div className="chart-wrap"><canvas ref={xpRef}/></div>
+      </div>
+
+      {/* BF Chart */}
+      <div className="card fade-in" style={{marginBottom:16}}>
+        <div className="sec-hdr" style={{color:'#fbbf24'}}>Body Fat % Trend ↓ lower is better</div>
+        <div className="chart-wrap">
+          {bfData.length>0 ? <canvas ref={bfRef}/> : <EmptyChart msg="Log body fat % to see trend"/>}
+        </div>
+      </div>
+
+      {/* Weekly History */}
+      <div className="card fade-in">
+        <div className="sec-hdr">Weekly History</div>
+        {weekHistory.length===0 ? (
+          <div style={{color:'#4b5563',fontSize:14,textAlign:'center',padding:'20px 0'}}>
+            Start logging to build your history.
+          </div>
+        ) : weekHistory.map(w=>(
+          <div key={w.wk} style={{padding:'12px 0',borderBottom:'1px solid #1a1a2e'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+              <div style={{fontSize:13,color:'white',fontWeight:700}}>{w.label}</div>
+              <div style={{color:'#a78bfa',fontWeight:900,fontSize:14}}>+{w.xp} XP</div>
+            </div>
+            <span className={`badge badge-${w.status.type}`}>{w.status.label}</span>
+            <div style={{fontSize:11,color:'#6b7280',marginTop:7}}>
+              {w.stats.steps10k}/7 steps · {w.stats.lifts}/4 lifts · {w.stats.conditioning}/2 cond · {w.stats.nutrition}/7 nutrition
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHOTOS TAB
+═══════════════════════════════════════════════════════════════════════ */
+
+function PhotosTab({ state, onUpdate }) {
+  const currentWeek = weekKey();
+  const allWeeks    = Object.keys(state.weeklyPhotos||{}).sort().reverse();
+  const [selWeek,   setSelWeek]   = useState(currentWeek);
+  const [compare,   setCompare]   = useState(false);
+  const [cmpW1,     setCmpW1]     = useState(currentWeek);
+  const [cmpW2,     setCmpW2]     = useState(allWeeks.find(w=>w!==currentWeek)||'');
+
+  const photos = state.weeklyPhotos || {};
+
+  const upload = (angle, e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const next = {
+        ...photos,
+        [currentWeek]: { ...(photos[currentWeek]||{}), [angle]: ev.target.result },
+      };
+      onUpdate({ weeklyPhotos: next });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const ANGLES = ['front','side','back'];
+
+  const PhotoGrid = ({weekData, label, showUpload=false}) => (
+    <div>
+      {label && <div style={{fontSize:12,color:'#6b7280',fontWeight:700,marginBottom:8}}>{label}</div>}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+        {ANGLES.map(a=>(
+          <div key={a}>
+            {showUpload ? (
+              <label style={{cursor:'pointer'}}>
+                <div className="photo-slot" style={{borderColor:(weekData||{})[a]?'#4ade80':'#2d2d3f'}}>
+                  {(weekData||{})[a]
+                    ? <img src={(weekData||{})[a]} alt={a}/>
+                    : <div style={{textAlign:'center'}}>
+                        <div style={{fontSize:26,color:'#4b5563'}}>+</div>
+                        <div style={{fontSize:10,color:'#6b7280',marginTop:2}}>Upload</div>
+                      </div>
+                  }
+                </div>
+                <input type="file" accept="image/*" style={{display:'none'}} onChange={e=>upload(a,e)}/>
+              </label>
+            ) : (
+              <div className="photo-slot">
+                {(weekData||{})[a]
+                  ? <img src={(weekData||{})[a]} alt={a}/>
+                  : <div style={{fontSize:11,color:'#4b5563'}}>—</div>
+                }
+              </div>
+            )}
+            <div style={{fontSize:11,color:'#6b7280',textAlign:'center',marginTop:5,textTransform:'capitalize',fontWeight:700}}>
+              {(weekData||{})[a]?'✓ ':''}{a}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="content" style={{paddingTop:20}}>
+      <div style={{fontSize:10,color:'#6b7280',letterSpacing:3,fontWeight:800,marginBottom:14}}>PROGRESS PHOTOS</div>
+
+      {/* Mode selector */}
+      <div style={{display:'flex',gap:8,marginBottom:14}}>
+        {['Weekly View','Compare'].map((m,i)=>(
+          <button key={m} onClick={()=>setCompare(i===1)}
+            style={{
+              flex:1,padding:'11px',borderRadius:10,border:'none',cursor:'pointer',
+              background: (compare===(i===1)) ? '#7c3aed' : '#1a1a2e',
+              color:      (compare===(i===1)) ? 'white'   : '#6b7280',
+              fontWeight:700,fontSize:13,
+              boxShadow: (compare===(i===1)) ? '0 2px 12px #7c3aed50' : 'none',
+              transition:'all 0.2s',
+            }}>
+            {m}
+          </button>
+        ))}
+      </div>
+
+      {!compare ? (
+        <>
+          {/* Week selector */}
+          <div className="card" style={{marginBottom:12}}>
+            <div className="sec-hdr">Select Week</div>
+            <select className="inp" value={selWeek} onChange={e=>setSelWeek(e.target.value)}>
+              <option value={currentWeek}>Current Week ({currentWeek})</option>
+              {allWeeks.filter(w=>w!==currentWeek).map(w=><option key={w} value={w}>{w}</option>)}
+            </select>
+          </div>
+
+          {/* Upload (current week only) */}
+          {selWeek===currentWeek && (
+            <div className="card" style={{marginBottom:12}}>
+              <div className="sec-hdr" style={{color:'#4ade80'}}>Upload — This Week</div>
+              <PhotoGrid weekData={photos[currentWeek]} showUpload={true}/>
+            </div>
+          )}
+
+          {/* View photos */}
+          {selWeek!==currentWeek && (
+            <div className="card" style={{marginBottom:12}}>
+              <div className="sec-hdr">{selWeek}</div>
+              <PhotoGrid weekData={photos[selWeek]}/>
+            </div>
+          )}
+
+          {/* If no photos at all */}
+          {!photos[currentWeek] && selWeek===currentWeek && (
+            <div style={{textAlign:'center',color:'#4b5563',padding:'12px 0',fontSize:13}}>
+              Upload your first photos above to start tracking your transformation.
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Compare selectors */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:14}}>
+            <div>
+              <div style={{fontSize:11,color:'#6b7280',marginBottom:6,fontWeight:700}}>WEEK A</div>
+              <select className="inp" value={cmpW1} onChange={e=>setCmpW1(e.target.value)}>
+                <option value={currentWeek}>Current ({currentWeek})</option>
+                {allWeeks.filter(w=>w!==currentWeek).map(w=><option key={w} value={w}>{w}</option>)}
+              </select>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:'#6b7280',marginBottom:6,fontWeight:700}}>WEEK B</div>
+              <select className="inp" value={cmpW2} onChange={e=>setCmpW2(e.target.value)}>
+                <option value="">Select week…</option>
+                {allWeeks.map(w=><option key={w} value={w}>{w}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {ANGLES.map(a=>(
+            <div key={a} className="card" style={{marginBottom:10}}>
+              <div className="sec-hdr" style={{textTransform:'capitalize'}}>{a}</div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                {[{w:cmpW1,p:photos[cmpW1]},{w:cmpW2,p:photos[cmpW2]}].map(({w,p},i)=>(
+                  <div key={i}>
+                    <div className="photo-slot">
+                      {p?.[a]
+                        ? <img src={p[a]} alt={a}/>
+                        : <div style={{fontSize:11,color:'#4b5563'}}>{w?'—':'Select week'}</div>
+                      }
+                    </div>
+                    <div style={{fontSize:9,color:'#6b7280',textAlign:'center',marginTop:5,fontWeight:700}}>
+                      {w}|'—'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {!cmpW2 && (
+            <div style={{textAlign:'center',color:'#4b5563',padding:'8px 0',fontSize:13}}>
+              Select a second week above to compare side by side.
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LEVEL UP ANIMATION
+═══════════════════════════════════════════════════════════════════════ */
+
+function LevelUpOverlay({ level, onDone }) {
+  useEffect(()=>{ const t=setTimeout(onDone,3200); return ()=>clearTimeout(t); },[]);
+  return (
+    <div className="levelup-overlay">
+      <div className="levelup-content">
+        <div style={{
+          fontSize:14,color:'#8b5cf6',letterSpacing:6,fontWeight:800,marginBottom:12
+        }}>SYSTEM ALERT</div>
+        <div style={{
+          fontSize:64,fontWeight:900,letterSpacing:4,lineHeight:1,
+          background:'linear-gradient(135deg,#8b5cf6,#f59e0b,#a78bfa)',
+          WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
+          marginBottom:8,
+        }}>LEVEL UP!</div>
+        <div style={{
+          fontSize:36,fontWeight:900,color:'white',
+          textShadow:'0 0 30px #8b5cf6',letterSpacing:2,
+        }}>LEVEL {level}</div>
+        <div style={{
+          marginTop:20,
+          display:'flex',justifyContent:'center',gap:6,
+        }}>
+          {Array.from({length:5},(_,i)=>(
+            <div key={i} style={{
+              width:8,height:8,borderRadius:'50%',
+              background:'#8b5cf6',
+              animation:`rankPulse ${0.5+i*0.1}s ease-in-out infinite`,
+              boxShadow:'0 0 10px #8b5cf6',
+            }}/>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   XP TOAST
+═══════════════════════════════════════════════════════════════════════ */
+
+function XPToast({ xp, onDone }) {
+  useEffect(()=>{ const t=setTimeout(onDone,1800); return ()=>clearTimeout(t); },[]);
+  return <div className="xp-toast">+{xp} XP</div>;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN APP
+═══════════════════════════════════════════════════════════════════════ */
+
+function App() {
+  const [state, setState] = useState(()=> loadState() || { ...INIT_STATE });
+  const [tab,   setTab]   = useState('home');
+  const [anim,  setAnim]  = useState(null); // { type:'xp'|'levelup', xp, level }
+
+  // Persist on change
+  useEffect(()=>{ saveState(state); }, [state]);
+
+  const handleUpdate = useCallback(updates => {
+    setState(prev => ({ ...prev, ...updates }));
+  },[]);
+
+  const handleXPGained = useCallback((xp, levelUp, level) => {
+    setAnim({ type: levelUp ? 'levelup' : 'xp', xp, level });
+  },[]);
+
+  if (state.firstLoad) {
+    return <WelcomeScreen onStart={()=>setState(p=>({...p,firstLoad:false}))}/>;
+  }
+
+  const TABS = [
+    { id:'home',     label:'Home',     Icon:Icon.Home    },
+    { id:'log',      label:'Log',      Icon:Icon.Edit    },
+    { id:'progress', label:'Progress', Icon:Icon.Chart   },
+    { id:'photos',   label:'Photos',   Icon:Icon.Camera  },
+  ];
+
+  return (
+    <div style={{minHeight:'100vh',background:'#0a0a0f'}}>
+
+      {/* Tab content */}
+      {tab==='home'     && <Dashboard   state={state}/>}
+      {tab==='log'      && <DailyLog    state={state} onUpdate={handleUpdate} onXPGained={handleXPGained}/>}
+      {tab==='progress' && <ProgressTab state={state}/>}
+      {tab==='photos'   && <PhotosTab   state={state} onUpdate={handleUpdate}/>}
+
+      {/* Bottom navigation */}
+      <nav className="nav-bar">
+        {TABS.map(t=>(
+          <button key={t.id} className={`nav-btn${tab===t.id?' active':''}`}
+            onClick={()=>setTab(t.id)}>
+            <t.Icon/>
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Animations */}
+      {anim?.type==='levelup' && (
+        <LevelUpOverlay level={anim.level} onDone={()=>setAnim(null)}/>
+      )}
+      {anim?.type==='xp' && (
+        <XPToast xp={anim.xp} onDone={()=>setAnim(null)}/>
+      )}
+    </div>
+  );
+}
+
+/* ── Mount ─────────────────────────────────────────────────────────── */
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
