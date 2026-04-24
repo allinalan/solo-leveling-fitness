@@ -298,7 +298,7 @@
     .divider { height: 1px; background: #1e1e2e; margin: 12px 0; }
 
     /* ── Scanline Effect (decorative) ───────────────────────────────── */
-   ,.scanline-overlay {
+    .scanline-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 1001;
       overflow: hidden; opacity: 0;
     }
@@ -519,7 +519,7 @@ const INIT_STATE = {
 };
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SMALL SVG ICONS
+   SMALL SVG IDONS
 ═══════════════════════════════════════════════════════════════════════ */
 
 const Icon = {
@@ -824,7 +824,7 @@ function QuickStats({ streak, totalXP, bodyFat, weekXP }) {
         <div key={s.label} className="card fade-in" style={{textAlign:'center',padding:14}}>
           <div style={{fontSize:22,marginBottom:4}}>{s.icon}</div>
           <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
-          <div style={{fontSize:9,color:'#6b7280',letterSpacing:2,fontWeight:800,marginTop:2}}>{s.label}</div>
+          <div style={{fontSize:9,color:'#6f7280',letterSpacing:2,fontWeight:800,marginTop:2}}>{s.label}</div>
         </div>
       ))}
     </div>
@@ -900,59 +900,93 @@ function Dashboard({ state }) {
 ═══════════════════════════════════════════════════════════════════════ */
 
 function DailyLog({ state, onUpdate, onXPGained }) {
-  const today       = dateStr();
-  const todayLog    = state.logs[today] || {};
-  const now         = new Date();
-  const isWeighIn   = WEIGH_IN_DAYS.has(now.getDay());
+  const [selectedDate, setSelectedDate] = useState(dateStr());
 
-  const [steps,     setSteps]     = useState(todayLog.steps     != null ? String(todayLog.steps)     : '');
-  const [isRest,    setIsRest]    = useState(todayLog.isRestDay  || false);
-  const [wDone,     setWDone]     = useState(todayLog.workoutCompleted || false);
-  const [wType,     setWType]     = useState(todayLog.workoutType      || 'Push');
-  const [nutWin,    setNutWin]    = useState(todayLog.nutritionWin     || false);
-  const [bw,        setBw]        = useState(todayLog.bodyWeight != null ? String(todayLog.bodyWeight) : '');
-  const [bf,        setBf]        = useState(todayLog.bodyFat    != null ? String(todayLog.bodyFat)    : '');
-  const [saved,     setSaved]     = useState(false);
+  const selLog    = state.logs[selectedDate] || {};
+  const selDate   = new Date(selectedDate + 'T12:00:00');
+  const isWeighIn = WEIGH_IN_DAYS.has(selDate.getDay());
+  const isToday   = selectedDate === dateStr();
 
-  const stepsInt = parseInt(steps)||0;
+  const [steps,  setSteps]  = useState(selLog.steps     != null ? String(selLog.steps)     : '');
+  const [isRest, setIsRest] = useState(selLog.isRestDay  || false);
+  const [wDone,  setWDone]  = useState(selLog.workoutCompleted || false);
+  const [wType,  setWType]  = useState(selLog.workoutType      || 'Push');
+  const [nutWin, setNutWin] = useState(selLog.nutritionWin     || false);
+  const [bw,     setBw]     = useState(selLog.bodyWeight != null ? String(selLog.bodyWeight) : '');
+  const [bf,     setBf]     = useState(selLog.bodyFat    != null ? String(selLog.bodyFat)    : '');
+  const [saved,  setSaved]  = useState(false);
+
+  useEffect(() => {
+    const log = state.logs[selectedDate] || {};
+    setSteps(log.steps     != null ? String(log.steps)     : '');
+    setIsRest(log.isRestDay  || false);
+    setWDone(log.workoutCompleted || false);
+    setWType(log.workoutType      || 'Push');
+    setNutWin(log.nutritionWin     || false);
+    setBw(log.bodyWeight != null ? String(log.bodyWeight) : '');
+    setBf(log.bodyFat    != null ? String(log.bodyFat)    : '');
+    setSaved(false);
+  }, [selectedDate]);
+
+  const stepsInt = parseInt(steps) || 0;
   const previewXP = dayXP({
-    steps: stepsInt, isRestDay:isRest,
-    workoutCompleted: isRest?false:wDone, workoutType:wType, nutritionWin:nutWin,
+    steps: stepsInt, isRestDay: isRest,
+    workoutCompleted: isRest ? false : wDone, workoutType: wType, nutritionWin: nutWin,
   });
 
   const handleSave = () => {
-    const prevLog = state.logs[today];
-    const prevXP  = dayXP(prevLog);
+    const prevLog  = state.logs[selectedDate];
+    const prevXP   = dayXP(prevLog);
 
     const log = {
-      steps:             stepsInt,
-      isRestDay:         isRest,
-      workoutCompleted:  isRest ? false : wDone,
-      workoutType:       (!isRest && wDone) ? wType : null,
-      nutritionWin:      nutWin,
-      bodyWeight:        bw ? parseFloat(bw) : (prevLog?.bodyWeight ?? null),
-      bodyFat:           bf ? parseFloat(bf) : (prevLog?.bodyFat    ?? null),
-      savedAt:           new Date().toISOString(),
+      steps:            stepsInt,
+      isRestDay:        isRest,
+      workoutCompleted: isRest ? false : wDone,
+      workoutType:      (!isRest && wDone) ? wType : null,
+      nutritionWin:     nutWin,
+      bodyWeight:       bw ? parseFloat(bw) : (prevLog ? prevLog.bodyWeight : null),
+      bodyFat:          bf ? parseFloat(bf) : (prevLog ? prevLog.bodyFat    : null),
+      savedAt:          new Date().toISOString(),
     };
 
-    const xpDiff  = previewXP - prevXP;
+    const xpDiff   = previewXP - prevXP;
     const newTotal = state.totalXP + xpDiff;
 
     const prevLvl = calcLevel(state.totalXP).level;
     const newLvl  = calcLevel(newTotal).level;
 
-    onUpdate({ logs: { ...state.logs, [today]: log }, totalXP: newTotal });
-    if (xpDiff > 0) onXPGained(xpDiff, newLvl > prevLvl, newLvl);
+    onUpdate({ logs: { ...state.logs, [selectedDate]: log }, totalXP: newTotal });
+    if (isToday && xpDiff > 0) onXPGained(xpDiff, newLvl > prevLvl, newLvl);
 
     setSaved(true);
-    setTimeout(()=>setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (
     <div className="content" style={{paddingTop:20}}>
       <div style={{fontSize:10,color:'#6b7280',letterSpacing:3,fontWeight:800,marginBottom:6}}>DAILY LOG</div>
-      <div style={{fontSize:22,fontWeight:900,color:'white',marginBottom:16}}>
-        {DAY_FULL[now.getDay()]}, {fmtDate(today)}
+
+      {/* Date header + picker */}
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:22,fontWeight:900,color:'white'}}>
+            {DAY_FULL[selDate.getDay()]}, {fmtDate(selectedDate)}
+          </div>
+          {!isToday && (
+            <div style={{fontSize:12,color:'#f59e0b',marginTop:2,fontWeight:700}}>✎ Editing past log</div>
+          )}
+        </div>
+        <input
+          type="date"
+          value={selectedDate}
+          max={dateStr()}
+          onChange={function(e){ if(e.target.value) setSelectedDate(e.target.value); }}
+          style={{
+            background:'#1a1a2e',color:'#a78bfa',border:'1px solid #2d2d3f',
+            borderRadius:8,padding:'8px 10px',fontSize:13,fontWeight:600,
+            colorScheme:'dark',
+          }}
+        />
       </div>
 
       {/* Weigh-in reminder */}
@@ -961,10 +995,10 @@ function DailyLog({ state, onUpdate, onXPGained }) {
           background:'#1a1a2e',border:'1px solid #8b5cf640',
           borderRadius:12,padding:'12px 16px',marginBottom:14,
           fontSize:13,color:'#a78bfa',fontWeight:700,
-          display:'flex',alignItems:'center',gap:10
+          display:'flex',alignItems:'center',gap:10,
         }}>
           <span style={{fontSize:18}}>📊</span>
-          <span>Weigh-in day — log weight & body fat: morning, post-bathroom, pre-food.</span>
+          <span>Weigh-in day — log weight and body fat: morning, post-bathroom, pre-food.</span>
         </div>
       )}
 
@@ -972,15 +1006,12 @@ function DailyLog({ state, onUpdate, onXPGained }) {
       <div className="card" style={{marginBottom:12}}>
         <div className="sec-hdr" style={{color:'#60a5fa'}}>Steps</div>
         <input className="inp" type="number" placeholder="Enter step count…"
-          value={steps} onChange={e=>setSteps(e.target.value)} style={{marginBottom:10}}/>
-        <div style={{
-          fontSize:13, fontWeight:700,
-          color: stepsInt>=10000 ? '#4ade80' : '#6b7280',
-        }}>
-          {stepsInt>=10000
+          value={steps} onChange={function(e){ setSteps(e.target.value); }} style={{marginBottom:10}}/>
+        <div style={{fontSize:13,fontWeight:700,color: stepsInt >= 10000 ? '#4ade80' : '#6b7280'}}>
+          {stepsInt >= 10000
             ? '✓ 10,000+ steps achieved  (+10 XP)'
-            : stepsInt>0
-              ? `${(10000-stepsInt).toLocaleString()} more steps to reach 10k`
+            : stepsInt > 0
+              ? String(10000 - stepsInt) + ' more steps to reach 10k'
               : 'Enter steps to see progress'}
         </div>
       </div>
@@ -993,8 +1024,8 @@ function DailyLog({ state, onUpdate, onXPGained }) {
             <div style={{fontSize:12,color:'#6b7280'}}>Workout will be set to No</div>
           </div>
           <div className="toggle">
-            <button className={`tog-opt${!isRest?' active':''}`} onClick={()=>setIsRest(false)}>No</button>
-            <button className={`tog-opt${isRest?' active':''}`}  onClick={()=>setIsRest(true)}>Yes</button>
+            <button className={!isRest ? 'tog-opt active' : 'tog-opt'} onClick={function(){ setIsRest(false); }}>No</button>
+            <button className={isRest  ? 'tog-opt active' : 'tog-opt'} onClick={function(){ setIsRest(true);  }}>Yes</button>
           </div>
         </div>
       </div>
@@ -1003,27 +1034,29 @@ function DailyLog({ state, onUpdate, onXPGained }) {
       {!isRest && (
         <div className="card" style={{marginBottom:12}}>
           <div className="sec-hdr">Workout</div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom: wDone?14:0}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom: wDone ? 14 : 0}}>
             <span style={{color:'#94a3b8',fontSize:14}}>Completed?</span>
             <div className="toggle">
-              <button className={`tog-opt${!wDone?' active':''}`} onClick={()=>setWDone(false)}>No</button>
-              <button className={`tog-opt${wDone?' active':''}`}  onClick={()=>setWDone(true)}>Yes</button>
+              <button className={!wDone ? 'tog-opt active' : 'tog-opt'} onClick={function(){ setWDone(false); }}>No</button>
+              <button className={wDone  ? 'tog-opt active' : 'tog-opt'} onClick={function(){ setWDone(true);  }}>Yes</button>
             </div>
           </div>
           {wDone && (
-            <>
+            <div style={{marginTop:0}}>
               <div style={{fontSize:12,color:'#6b7280',marginBottom:10}}>Workout type:</div>
               <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                {ACL_WORKOUT_TYPES.map(t=>(
-                  <button key={t} className={`wtype-chip${wType===t?' active':''}`} onClick={()=>setWType(t)}>
-                    {t}
-                  </button>
-                ))}
+                {ALL_WORKOUT_TYPES.map(function(t){
+                  return (
+                    <button key={t} className={wType === t ? 'wtype-chip active' : 'wtype-chip'} onClick={function(){ setWType(t); }}>
+                      {t}
+                    </button>
+                  );
+                })}
               </div>
-              <div style={{marginTop:10,fontSize:13,fontWeight:700,color:wType==='Conditioning'?'#4ade80':'#c084fc'}}>
-                {wType==='Conditioning' ? '+15 XP (Conditioning)' : '+20 XP (Lift)'}
+              <div style={{marginTop:10,fontSize:13,fontWeight:700,color: wType === 'Conditioning' ? '#4ade80' : '#c084fc'}}>
+                {wType === 'Conditioning' ? '+15 XP (Conditioning)' : '+20 XP (Lift)'}
               </div>
-            </>
+            </div>
           )}
         </div>
       )}
@@ -1038,8 +1071,8 @@ function DailyLog({ state, onUpdate, onXPGained }) {
             </div>
           </div>
           <div className="toggle">
-            <button className={`tog-opt${!nutWin?' active':''}`} onClick={()=>setNutWin(false)}>No</button>
-            <button className={`tog-opt${nutWin?' active':''}`}  onClick={()=>setNutWin(true)}>Yes</button>
+            <button className={!nutWin ? 'tog-opt active' : 'tog-opt'} onClick={function(){ setNutWin(false); }}>No</button>
+            <button className={nutWin  ? 'tog-opt active' : 'tog-opt'} onClick={function(){ setNutWin(true);  }}>Yes</button>
           </div>
         </div>
       </div>
@@ -1053,12 +1086,12 @@ function DailyLog({ state, onUpdate, onXPGained }) {
           <div>
             <div style={{fontSize:12,color:'#6b7280',marginBottom:6}}>Weight (lbs)</div>
             <input className="inp" type="number" placeholder="e.g. 185" step="0.1"
-              value={bw} onChange={e=>setBw(e.target.value)}/>
+              value={bw} onChange={function(e){ setBw(e.target.value); }}/>
           </div>
           <div>
             <div style={{fontSize:12,color:'#6b7280',marginBottom:6}}>Body Fat %</div>
             <input className="inp" type="number" placeholder="e.g. 21.5" step="0.1"
-              value={bf} onChange={e=>setBf(e.target.value)}/>
+              value={bf} onChange={function(e){ setBf(e.target.value); }}/>
           </div>
         </div>
       </div>
@@ -1070,14 +1103,14 @@ function DailyLog({ state, onUpdate, onXPGained }) {
         border:'1px solid #8b5cf640',
         textAlign:'center',
       }}>
-        <div style={{fontSize:11,color:'#6b7280',letterSpacing:2,fontWeight:800,marginBottom:4}}>XP THIS LOG</div>
+        <div style={{fontSize:11,color:'#6f7280',letterSpacing:2,fontWeight:800,marginBottom:4}}>XP THIS LOG</div>
         <div style={{
           fontSize:40,fontWeight:900,
           background:'linear-gradient(90deg,#8b5cf6,#a78bfa)',
           WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',
         }}>+{previewXP} XP</div>
         <div style={{fontSize:12,color:'#6b7280',marginTop:2}}>
-          {70-previewXP > 0 ? `${70-previewXP} XP remaining to daily max` : '🏆 Daily maximum reached!'}
+          {(70 - previewXP) > 0 ? String(70 - previewXP) + ' XP remaining to daily max' : '🏆 Daily maximum reached!'}
         </div>
       </div>
 
@@ -1267,7 +1300,7 @@ function ProgressTab({ state }) {
               <div style={{color:'#a78bfa',fontWeight:900,fontSize:14}}>+{w.xp} XP</div>
             </div>
             <span className={`badge badge-${w.status.type}`}>{w.status.label}</span>
-            <div style={{fontSize:11,color:'#6b7280',marginTop:7}}>
+            <div style={{fontSize:11,color:'#6f7280',marginTop:7}}>
               {w.stats.steps10k}/7 steps · {w.stats.lifts}/4 lifts · {w.stats.conditioning}/2 cond · {w.stats.nutrition}/7 nutrition
             </div>
           </div>
