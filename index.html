@@ -297,8 +297,8 @@
     /* ── Horizontal Divider ─────────────────────────────────────────── */
     .divider { height: 1px; background: #1e1e2e; margin: 12px 0; }
 
-    /* ── Scanline Effect (decorative) ──────────────────────────────────── */
-    .scanline-overlay {
+    /* ── Scanline Effect (decorative) ───────────────────────────────── */
+   ,.scanline-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 1001;
       overflow: hidden; opacity: 0;
     }
@@ -337,7 +337,7 @@ const RANK_DATA = [
   { rank:'C', title:'Consistent',    minXP:1000, bfMax:22,       color:'#60a5fa', bg:'#60a5fa15' },
   { rank:'B', title:'Disciplined',   minXP:2000, bfMax:19,       color:'#c084fc', bg:'#c084fc15' },
   { rank:'A', title:'Relentless',    minXP:3500, bfMax:17,       color:'#fbbf24', bg:'#fbbf2415' },
-  { rank:'S', title:'Elite',         minXP:5500, bfMax:15,       col71', bg:'#f8717115' },
+  { rank:'S', title:'Elite',         minXP:5500, bfMax:15,       color:'#f87171', bg:'#f8717115' },
 ];
 
 const LIFT_TYPES = ['Push','Pull','Legs','Posterior'];
@@ -824,7 +824,7 @@ function QuickStats({ streak, totalXP, bodyFat, weekXP }) {
         <div key={s.label} className="card fade-in" style={{textAlign:'center',padding:14}}>
           <div style={{fontSize:22,marginBottom:4}}>{s.icon}</div>
           <div style={{fontSize:22,fontWeight:900,color:s.color}}>{s.val}</div>
-          <div style={{fontSize:9,color:'#6f7280',letterSpacing:2,fontWeight:800,marginTop:2}}>{s.label}</div>
+          <div style={{fontSize:9,color:'#6b7280',letterSpacing:2,fontWeight:800,marginTop:2}}>{s.label}</div>
         </div>
       ))}
     </div>
@@ -1014,7 +1014,7 @@ function DailyLog({ state, onUpdate, onXPGained }) {
             <>
               <div style={{fontSize:12,color:'#6b7280',marginBottom:10}}>Workout type:</div>
               <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                {ACLOWORKOUT_TYPES.map(t=>(
+                {ACL_WORKOUT_TYPES.map(t=>(
                   <button key={t} className={`wtype-chip${wType===t?' active':''}`} onClick={()=>setWType(t)}>
                     {t}
                   </button>
@@ -1430,7 +1430,7 @@ function PhotosTab({ state, onUpdate }) {
                       }
                     </div>
                     <div style={{fontSize:9,color:'#6b7280',textAlign:'center',marginTop:5,fontWeight:700}}>
-                      {w}|'—'}
+                      {w||'—'}
                     </div>
                   </div>
                 ))}
